@@ -75,7 +75,7 @@ int main(void){
 
 	DMA_CH1_config();
 
-	State_ptr = &B0;	// Set state machine entry
+	State_ptr = &A1;	// Set state machine entry
 
 
 	/*	Setup ADC1	*/
@@ -146,6 +146,8 @@ void A1(void){
 	uint8_t result = 0;
 
 	if (Process_Vars_Handle->ADC_Burst_Running == 0x1 && Process_Vars_Handle->ADC1_Idle == 0x1){		// If ADC1 burst running and ADC1 conv done
+
+		Process_Vars_Handle->ADC1_Idle = 0x0;
 
 		if (ADC1_HANDLE->ADC1_NEXT_CH == 0x1){
 
