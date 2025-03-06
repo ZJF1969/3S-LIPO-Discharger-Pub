@@ -137,15 +137,16 @@ void TIMConfig(void){
 
 	/* TIM4 INIT - ADC */
 
-	RCC -> APB1ENR |= RCC_APB1ENR_TIM4EN;	// Enable TIM4 clock
+	RCC -> APB1ENR |= RCC_APB1ENR_TIM4EN;				// Enable TIM4 clock
 
-	TIM4->CR1 |= TIM_CR1_URS; 					// Only overflow gen UEV
-	TIM4->DIER |= TIM_DIER_UIE;					// EN UEV IRQ
-	TIM4->ARR = sys_clk / ADC1_CH1_burst_freq;	// Load timer with burst freq value
+	TIM4->CR1 |= TIM_CR1_URS; 							// Only overflow gen UEV
+	TIM4->DIER |= TIM_DIER_UIE;							// EN UEV IRQ
+	TIM4->PSC |= 0xFA;									// Set prescaler to 250
+	TIM4->ARR = sys_clk / 0xFA / ADC1_CH1_burst_freq;	// Load timer with burst freq value
 
-	NVIC_SetPriority(TIM4_IRQn, 0x4);		//Set TIM4 IRQ priority in the NVIC
+	NVIC_SetPriority(TIM4_IRQn, 0x4);					//Set TIM4 IRQ priority in the NVIC
 
-	TIM4->CR1 |= 0x1;							// Start timer
+	TIM4->CR1 |= 0x1;									// Start timer
 
 
 }
