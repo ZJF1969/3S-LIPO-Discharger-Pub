@@ -1,0 +1,65 @@
+File to track all pin connections for this STM32F303RE project.
+z`
+
+
+Current Config:
+
+	- ADC1_CH1 -> PA0 / A0
+	- ADC1_CH2 -> PA1 / A1
+	- ADC1_CH4 -> PA3 / D0
+	
+	- Heartbeat LED -> PA5 / D13
+	
+	- User Button -> PC13
+
+	//- OPAMP1 NON-INV input -> PA7 / D11
+	//- OPAMP1 output -> PA2 / D1
+	- OPAMP2 NON-INV input -> PB0 / A3								WORKING
+	- OPAMP2 output -> PA6 / D12
+	- OPAMP3 NON-INV input -> PB13 / PIN30 right side header		WORKING
+	- OPAMP3 output -> PB1 / PIN24 right side header
+	
+	- OPAMP4 NON-INV input -> PA4 / A2								WORKING
+	- OPAMP4 output -> PB12 / PIN16 right side header
+	
+	
+Future Planning:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
