@@ -145,31 +145,37 @@ void A1(void){
 
 	uint8_t result = 0;
 
-	if (Process_Vars_Handle->ADC1_Idle == 0x1){							// If ADC done running
+	if (Process_Vars_Handle->ADC_Burst_Running == 0x1 && Process_Vars_Handle->ADC1_Idle == 0x1){		// If ADC1 burst running and ADC1 conv done
 
-		if (ADC1_HANDLE->ADC1_CUR_CH == 0x1){
+		if (ADC1_HANDLE->ADC1_NEXT_CH == 0x1){
 
-			ADC1_HANDLE->ADC1_CUR_CH = 0x2;								// Set to next channel
+			ADC1_Set_Seq(ADC1_HANDLE->ADC1_NEXT_CH);					// Set ADC1 with current channel burst
+			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Write next destination address
 
-			ADC1_Set_Seq(ADC1_HANDLE->ADC1_CUR_CH);						// Set ADC1 with current channel burst
-			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Write next destination address
+			ADC1_HANDLE->ADC1_NEXT_CH = 0x2;							// Set next channel
 
 			result = ADC1_Start_Conv();									// Start ADC1 conv
 			if(result == 1){ /*set error*/ }
 
 		}
-		else if (ADC1_HANDLE->ADC1_CUR_CH == 0x2){
+		else if (ADC1_HANDLE->ADC1_NEXT_CH == 0x2){
 
-			ADC1_HANDLE->ADC1_CUR_CH = 0x4;								// Set to next channel
+			ADC1_Set_Seq(ADC1_HANDLE->ADC1_NEXT_CH);					// Set ADC1 with current channel burst
+			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Write next destination address
 
-			ADC1_Set_Seq(ADC1_HANDLE->ADC1_CUR_CH);						// Set ADC1 with current channel burst
+			ADC1_HANDLE->ADC1_NEXT_CH = 0x4;							// Set next channel
+
+			result = ADC1_Start_Conv();									// Start ADC1 conv
+			if(result == 1){ /*set error*/ }
+
+		}
+		else if (ADC1_HANDLE->ADC1_NEXT_CH == 0x4){
+
+			ADC1_Set_Seq(ADC1_HANDLE->ADC1_NEXT_CH);					// Set ADC1 with current channel burst
 			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Write next destination address
 
 			result = ADC1_Start_Conv();									// Start ADC1 conv
 			if(result == 1){ /*set error*/ }
-
-		}
-		else if (ADC1_HANDLE->ADC1_CUR_CH == 0x4){
 
 			Process_Vars_Handle->ADC_Burst_Running = 0x0;				// ADC1 burst done
 

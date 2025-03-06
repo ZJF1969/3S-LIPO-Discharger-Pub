@@ -193,7 +193,7 @@ uint8_t ADC1_Start_Conv(void){
 
 	if (!((ADC1 -> CR >> 2) & 0x1)) {				// Check for no Conver in progress
 
-		ADC1_Set_Seq(ADC1_HANDLE->ADC1_CUR_CH);		// Update current ADC CH
+		//ADC1_Set_Seq(ADC1_HANDLE->ADC1_NEXT_CH);	// Update current ADC CH
 
 		ADC1 -> CR |= (0x1 << 2);					// Start ADC1 conv
 

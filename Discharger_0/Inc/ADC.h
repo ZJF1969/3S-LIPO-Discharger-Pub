@@ -30,7 +30,7 @@ extern uint32_t ADC1_IRQ_MASK;
 
 typedef struct ADC1_OBJ {		// Create struct type to store ADC1 CH1 vars
 
-	uint8_t ADC1_CUR_CH;							// Current CH selected for sampling burst
+	uint8_t ADC1_NEXT_CH;							// Current CH selected for sampling burst
 
 	uint16_t ADC1_CH1_DATA[ADC1_N_BURST_CONST];		// CH1 data buffer
 	uint16_t ADC1_CH2_DATA[ADC1_N_BURST_CONST];		// CH2 data buffer
