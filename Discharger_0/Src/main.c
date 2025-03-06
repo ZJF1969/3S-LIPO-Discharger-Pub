@@ -143,13 +143,51 @@ void A0(void){
 
 void A1(void){
 
+	uint8_t result = 0;
+
+	if (Process_Vars_Handle->ADC1_Idle == 0x1){							// If ADC done running
+
+		if (ADC1_HANDLE->ADC1_CUR_CH == 0x1){
+
+			ADC1_HANDLE->ADC1_CUR_CH = 0x2;								// Set to next channel
+
+			ADC1_Set_Seq(ADC1_HANDLE->ADC1_CUR_CH);						// Set ADC1 with current channel burst
+			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Write next destination address
+
+			result = ADC1_Start_Conv();									// Start ADC1 conv
+			if(result == 1){ /*set error*/ }
+
+		}
+		else if (ADC1_HANDLE->ADC1_CUR_CH == 0x2){
+
+			ADC1_HANDLE->ADC1_CUR_CH = 0x4;								// Set to next channel
+
+			ADC1_Set_Seq(ADC1_HANDLE->ADC1_CUR_CH);						// Set ADC1 with current channel burst
+			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Write next destination address
+
+			result = ADC1_Start_Conv();									// Start ADC1 conv
+			if(result == 1){ /*set error*/ }
+
+		}
+		else if (ADC1_HANDLE->ADC1_CUR_CH == 0x4){
+
+			Process_Vars_Handle->ADC_Burst_Running = 0x0;				// ADC1 burst done
+
+		}
+
+	}
+
+
+
+	/*
+
 	if ((Process_Vars_Handle->ADC1_Idle & Process_Vars_Handle->ADC1_CH1_Data_Good) == 0x1) {
 
 		ADC1_Process_Data();
 		State_ptr = &B2;
 
 	}
-
+*/
 }
 
 /***************************************************************************************************************************************/

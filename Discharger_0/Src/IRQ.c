@@ -103,8 +103,6 @@ void TIM4_IRQHandler(void){
 
 void ADC1_2_IRQHandler(void){
 
-	uint8_t result = 0;
-
 	switch (ADC1 -> ISR & ADC1_IRQ_MASK) {		// Mask ISR reg with expected IRQ flags
 
 		case ADC_ISR_EOS:						// EOS flag
@@ -112,35 +110,7 @@ void ADC1_2_IRQHandler(void){
 			ADC1->ISR |= 0x1;								// Clr IRQ flags
 			ADC1_Clr_Pend_Irq();							// Clr pending IRQ
 
-			if (ADC1_HANDLE->ADC1_CUR_CH == 0x1){
-
-				ADC1_HANDLE->ADC1_CUR_CH = 0x2;
-
-				ADC1_Set_Seq(ADC1_HANDLE->ADC1_CUR_CH);					// Set ADC1 with current channel burst
-				DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH2_DATA[0]);
-
-				result = ADC1_Start_Conv();								// Start ADC1 conv
-				if(result == 1){ /*set error*/ }
-
-			}
-			else if (ADC1_HANDLE->ADC1_CUR_CH == 0x2){
-
-				ADC1_HANDLE->ADC1_CUR_CH = 0x4;
-
-				ADC1_Set_Seq(ADC1_HANDLE->ADC1_CUR_CH);					// Set ADC1 with current channel burst
-				DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH4_DATA[0]);
-
-				result = ADC1_Start_Conv();								// Start ADC1 conv
-				if(result == 1){ /*set error*/ }
-
-			}
-			else if (ADC1_HANDLE->ADC1_CUR_CH == 0x4){
-
-				Process_Vars_Handle->ADC1_Idle = 0x1;
-
-			}
-
-
+			Process_Vars_Handle->ADC1_Idle = 0x1;			// ADC1 conv done
 
 			break;
 

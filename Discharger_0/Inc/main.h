@@ -29,7 +29,7 @@ typedef struct Process_Vars_Obj {		// Create struct type to store main process v
 
 	uint8_t ADC1_Idle;
 	uint8_t ADC1_CH1_Data_Good;
-	uint8_t PWM_Running;
+	uint8_t ADC_Burst_Running;
 
 	float V_C1;					// Cell 1 (TOP) voltage
 	float V_C2;					// Cell 2 (MID) voltage
