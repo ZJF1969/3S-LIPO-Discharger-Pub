@@ -32,7 +32,7 @@ void DMA_CH1_set_write_addr(uint32_t *addr){
 
 	DMA1_Channel1->CCR &= ~0x1;		// Disable DMA1 CH1 to be able to write to mem addr
 
-	DMA1_Channel1->CMAR |= (uint32_t)addr;	// Set mem addr
+	DMA1_Channel1->CMAR = (uint32_t)addr;	// Set mem addr
 
 	DMA1_Channel1->CCR |= 0x1;		// EN DMA CH1 again
 
