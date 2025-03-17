@@ -181,21 +181,24 @@ int ADC1_Cycle_Start(void){
 
 void ADC1_Cycle_Stop(void){
 
-	NVIC_DisableIRQ(TIM4_IRQn);					// Dis TIM4 IRQ to stop ADC1 cycle
+	NVIC_DisableIRQ(TIM4_IRQn);		// Dis TIM4 IRQ to stop ADC1 cycle
 
 }
 
 /***************************************************************************************************************************************/
 
-/*	Start an ADC1 conversion	*/
+/*	Start an ADC1 conversion							*/
+/*	Args: Channel to run, addr of destination buffer	*/
 
-uint8_t ADC1_Start_Conv(void){
+uint8_t ADC1_Start_Conv(uint8_t ch, uint32_t *buffer){
 
-	if (!((ADC1 -> CR >> 2) & 0x1)) {				// Check for no Conver in progress
+	if (!((ADC1 -> CR >> 2) & 0x1)) {		// Check for no Conver in progress
 
-		//ADC1_Set_Seq(ADC1_HANDLE->ADC1_NEXT_CH);	// Update current ADC CH
+		ADC1_Set_Seq(ch);					// Update current ADC1 CH
 
-		ADC1 -> CR |= (0x1 << 2);					// Start ADC1 conv
+		DMA_CH1_set_write_addr(buffer);		// Write next destination address
+
+		ADC1 -> CR |= (0x1 << 2);			// Start ADC1 conv
 
 		return 0;
 

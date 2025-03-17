@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include "main.h"
+#include "DMA.h"
 #include "stm32f303xe.h"
 
 
