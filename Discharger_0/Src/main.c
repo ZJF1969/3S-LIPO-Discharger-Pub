@@ -151,35 +151,27 @@ void A1(void){
 
 		if (ADC1_HANDLE->ADC1_NEXT_CH == 0x1){
 
-			ADC1_Set_Seq(ADC1_HANDLE->ADC1_NEXT_CH);					// Set ADC1 with current channel burst
-			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Write next destination address
-
-			ADC1_HANDLE->ADC1_NEXT_CH = 0x2;							// Set next channel
-
-			result = ADC1_Start_Conv();									// Start ADC1 conv
+			result = ADC1_Start_Conv(ADC1_HANDLE_>ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Start ADC1 CH1 conv
 			if(result == 1){ /*set error*/ }
+			
+			ADC1_HANDLE->ADC1_NEXT_CH = 0x2;					// Set next channel
 
 		}
 		else if (ADC1_HANDLE->ADC1_NEXT_CH == 0x2){
-
-			ADC1_Set_Seq(ADC1_HANDLE->ADC1_NEXT_CH);					// Set ADC1 with current channel burst
-			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Write next destination address
-
-			ADC1_HANDLE->ADC1_NEXT_CH = 0x4;							// Set next channel
-
-			result = ADC1_Start_Conv();									// Start ADC1 conv
+			
+			result = ADC1_Start_Conv(ADC1_HANDLE_>ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Start ADC1 CH2 conv
 			if(result == 1){ /*set error*/ }
+			
+			ADC1_HANDLE->ADC1_NEXT_CH = 0x4;					// Set next channel
 
 		}
 		else if (ADC1_HANDLE->ADC1_NEXT_CH == 0x4){
-
-			ADC1_Set_Seq(ADC1_HANDLE->ADC1_NEXT_CH);					// Set ADC1 with current channel burst
-			DMA_CH1_set_write_addr(&ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Write next destination address
-
-			result = ADC1_Start_Conv();									// Start ADC1 conv
+			
+			result = ADC1_Start_Conv(ADC1_HANDLE_>ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH4 conv
 			if(result == 1){ /*set error*/ }
 
-			Process_Vars_Handle->ADC_Burst_Running = 0x0;				// ADC1 burst done
+			ADC1_HANDLE->ADC1_NEXT_CH = 0x1;					// Reset next channel
+			Process_Vars_Handle->ADC_Burst_Running = 0x0;		// ADC1 burst done
 
 		}
 
