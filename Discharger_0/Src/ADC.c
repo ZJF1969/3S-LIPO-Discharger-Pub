@@ -190,7 +190,7 @@ void ADC1_Cycle_Stop(void){
 /*	Start an ADC1 conversion							*/
 /*	Args: Channel to run, addr of destination buffer	*/
 
-uint8_t ADC1_Start_Conv(uint8_t ch, uint32_t *buffer){
+uint8_t ADC1_Start_Conv(uint8_t ch, uint16_t *buffer){
 
 	if (!((ADC1 -> CR >> 2) & 0x1)) {		// Check for no Conver in progress
 

@@ -9,13 +9,11 @@
 #define ADC_H_
 
 
-
 #include <stddef.h>
 #include <stdlib.h>
 
 #include "main.h"
 #include "DMA.h"
-#include "stm32f303xe.h"
 
 
 #define ADC1_N_BURST_CONST	10	// Num samples each ADC1 CH1 burst sequence
@@ -68,7 +66,7 @@ extern int ADC1_Cal(int mode); //proto
 extern int ADC1_Cycle_Start(void);
 extern void ADC1_Cycle_Stop(void);
 
-extern uint8_t ADC1_Start_Conv(void);
+extern uint8_t ADC1_Start_Conv(uint8_t ch, uint16_t *buffer);
 
 extern int GetVDDA(void);
 

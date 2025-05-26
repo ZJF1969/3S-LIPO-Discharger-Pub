@@ -83,6 +83,9 @@ void GPIOConfig(void){
 	GPIOA->MODER |= (0x3 << 2);		// Set ADC1_CH2 input PA1 to analog mode
 	GPIOA->MODER |= (0x3 << 6);		// Set ADC1_CH4 input PA3 to analog mode
 
+	GPIOA->MODER &= ~(0x3 << 16);	// Set PA8 to input for batt check
+	GPIOA->PUPDR |= (0x2 << 16); 	// Config PA8 for pulldown
+
 
 	/*	PWM	 */
 
@@ -111,6 +114,17 @@ void GPIOConfig(void){
 	GPIOB->MODER |= (0x3 << 24);	// Set OPAMP4 output PB12 to analog mode
 
 }
+
+/***************************************************************************************************************************************/
+
+/* Read in bitwise value at PA8 to check for battery connection */
+
+BOOL BattCheck(void){
+
+	return (BOOL)((GPIOA->IDR & 0x8) >> 8);
+
+}
+
 
 /***************************************************************************************************************************************/
 

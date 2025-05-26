@@ -8,24 +8,25 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-
-#include "stm32f303xe.h"
-#include "core_cm4.h"
-#include "cmsis_gcc.h"
-
-#include <stdlib.h>
 #include <stdint.h>
 
-#include "stm32f303re_sys_init.h"
-#include "IRQ.h"
-#include "PWM.h"
-#include "ADC.h"
-#include "DMA.h"
+#include "stm32f303xe.h"
+
+
+#define BOOL unsigned char
+#define TRUE 1
+#define FALSE 0
+
+
+extern const uint32_t SYS_clk;
 
 
 /***************************************************************************************************************************************/
 
 typedef struct Process_Vars_Obj {		// Create struct type to store main process vars
+
+	BOOL SYS_ON;
+	BOOL BATT_GOOD;
 
 	uint8_t ADC1_Idle;
 	uint8_t ADC1_CH1_Data_Good;
@@ -45,7 +46,7 @@ extern uint8_t Process_Vars_Obj_init(void *pMemory, Process_Vars_Obj_Alias obj);
 
 /***************************************************************************************************************************************/
 
-extern int Debounce(uint16_t input, int *cnt, int *btn_lock);
+extern BOOL Debounce(uint16_t input, int *cnt, int *btn_lock);
 
 extern void Millisec(float microSec);
 

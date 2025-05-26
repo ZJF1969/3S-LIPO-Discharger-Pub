@@ -1,5 +1,24 @@
 File to track all pin connections for this STM32F303RE project.
-z`
+
+
+Mapped Pins:
+
+	- PA0
+	- PA1
+	- PA2
+	- PA3
+	- PA4
+	- PA5
+	- PA6
+	- PA7
+	- PA8
+
+	- PB0
+	- PB1
+	- PB12
+	- PB13
+	
+	- PC13
 
 
 Current Config:
@@ -7,6 +26,8 @@ Current Config:
 	- ADC1_CH1 -> PA0 / A0
 	- ADC1_CH2 -> PA1 / A1
 	- ADC1_CH4 -> PA3 / D0
+	
+	- Batt Check -> PA8 / D7
 	
 	- Heartbeat LED -> PA5 / D13
 	

@@ -8,19 +8,19 @@
 #ifndef STM32F303RE_SYS_INIT_H_
 #define STM32F303RE_SYS_INIT_H_
 
-#include "stm32f303xe.h"
-#include "core_cm4.h"
+
 #include "ADC.h"
 #include "main.h"
-#include "PWM.h"
-#include "math.h"
 
+#include "math.h"
 
 
 
 extern void SysInit(void);
 
 extern void GPIOConfig(void);
+
+extern BOOL BattCheck(void);
 
 extern void TIMConfig(void);
 

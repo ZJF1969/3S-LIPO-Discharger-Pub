@@ -18,8 +18,16 @@
 
 #include "main.h"
 
+#include "ADC.h"
+#include "IRQ.h"
+#include "stm32f303re_sys_init.h"
+
 
 #define GetPeriod(x) (1 / (float)x)
+
+
+const uint32_t SYS_clk;
+
 
 /***************************************************************************************************************************************/
 
@@ -54,9 +62,9 @@ void (*State_ptr)(void);       // State machine pointer
 
 int PC13_cnt = 0;		// Debounce vars
 int PC13_lock = 0;
-int PC13_pressed = 0;
+BOOL PC13_pressed = 0;
 
-int state = 0;
+int state = 0;			// Error catch
 
 /***************************************************************************************************************************************/
 
@@ -75,7 +83,7 @@ int main(void){
 
 	DMA_CH1_config();
 
-	State_ptr = &A1;	// Set state machine entry
+	State_ptr = &B0;	// Set state machine entry to Idle state
 
 
 	/*	Setup ADC1	*/
@@ -92,20 +100,42 @@ int main(void){
 	state = ADC1_Param_Setup();
 	if (state == 1) { A2(); }
 
-
 	ADC1_IRQ_EN();							// EN ADC1 IRQs
 
-	Process_Vars_Handle->ADC1_Idle = 0x1;	// ADC1 idle
+	Process_Vars_Handle->ADC1_Idle = 0x1;	// ADC is idle
 
 
-	state = ADC1_Cycle_Start();
-	if (state == 1) { A2(); }
+	//state = ADC1_Cycle_Start();
+	//if (state == 1) { A2(); }
 
 
 	while(1) {
 
 
+		// WATCHDOG
 
+
+		/*	Check for ON/OFF btn activity	*/
+
+		PC13_pressed = Debounce( (((GPIOC->IDR) & GPIO_IDR_13) >> 13), &PC13_cnt, &PC13_lock); //poll blue btn, PC13, active low, service Debounce
+
+		if (PC13_pressed == TRUE && Process_Vars_Handle->SYS_ON == FALSE){
+
+			Process_Vars_Handle->SYS_ON = TRUE;
+			State_ptr = &A0;
+
+		}
+		else if(PC13_pressed == TRUE && Process_Vars_Handle->SYS_ON == TRUE){
+
+			Process_Vars_Handle->SYS_ON = FALSE;
+			State_ptr = &B0;
+
+			// TURN OFF LED
+
+		}
+
+
+		/*	Enter state machine	*/
 
 		(*State_ptr)();
 
@@ -115,25 +145,19 @@ int main(void){
 
 /***************************************************************************************************************************************/
 
-/*	Idle state  */
+/*	Startup state  			*/
+/*	Turn LED, batt check	*/
 
 void A0(void){
 
-	//PC13_pressed = Debounce( (((GPIOC -> IDR) & GPIO_IDR_13) >> 13), &PC13_cnt, &PC13_lock); //poll blue btn, PC13, active low, service Debounce
+	// TURN ON LED
 
-	//if (PC13_pressed == 1) {
 
-		//State_ptr = &A1;
-	//}
-
-	if (Process_Vars_Handle->ADC1_Idle == 0x0){
+	//if(BATT_CHECK() == TRUE){
 
 		State_ptr = &A1;
-	}
 
-
-
-
+	//}
 
 }
 
@@ -151,7 +175,7 @@ void A1(void){
 
 		if (ADC1_HANDLE->ADC1_NEXT_CH == 0x1){
 
-			result = ADC1_Start_Conv(ADC1_HANDLE_>ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Start ADC1 CH1 conv
+			result = ADC1_Start_Conv(ADC1_HANDLE->ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Start ADC1 CH1 conv
 			if(result == 1){ /*set error*/ }
 			
 			ADC1_HANDLE->ADC1_NEXT_CH = 0x2;					// Set next channel
@@ -159,7 +183,7 @@ void A1(void){
 		}
 		else if (ADC1_HANDLE->ADC1_NEXT_CH == 0x2){
 			
-			result = ADC1_Start_Conv(ADC1_HANDLE_>ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Start ADC1 CH2 conv
+			result = ADC1_Start_Conv(ADC1_HANDLE->ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Start ADC1 CH2 conv
 			if(result == 1){ /*set error*/ }
 			
 			ADC1_HANDLE->ADC1_NEXT_CH = 0x4;					// Set next channel
@@ -167,7 +191,7 @@ void A1(void){
 		}
 		else if (ADC1_HANDLE->ADC1_NEXT_CH == 0x4){
 			
-			result = ADC1_Start_Conv(ADC1_HANDLE_>ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH4 conv
+			result = ADC1_Start_Conv(ADC1_HANDLE->ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH4 conv
 			if(result == 1){ /*set error*/ }
 
 			ADC1_HANDLE->ADC1_NEXT_CH = 0x1;					// Reset next channel
@@ -217,10 +241,10 @@ void A2(void){
 
 /***************************************************************************************************************************************/
 
-
+/*	Idle state  */
+/*	Do nothing	*/
 
 void B0(void){
-
 
 
 }
@@ -257,7 +281,7 @@ void B2(void){
 
 	new_d = (ADC1_HANDLE->ADC1_AIN * 0.25) + 0.175;
 
-	UpdatePWM(new_d);
+	//UpdatePWM(new_d);
 
 	State_ptr = &A1;
 
@@ -282,31 +306,31 @@ uint8_t Process_Vars_Obj_init(void *pMemory, Process_Vars_Obj_Alias obj){
 
 /***************************************************************************************************************************************/
 
-int Debounce(uint16_t input, int *cnt, int *btn_lock){
+/* Setup for one-shot */
+/* Debounce is 200 counts max, high if > 100, low if < 100 */
 
-	/* Setup for one-shot */
-	/* Debounce is 200 counts max, high if > 100, low if < 100 */
+BOOL Debounce(uint16_t input, int *cnt, int *btn_lock){
 
-	if (input == 0 && *cnt < 0x7D0) { (*cnt)++; } // increment counter
-	else if (input == 1 && *cnt > 0) { (*cnt)--; }    // decrement counter
+	if (~input == 1 && *cnt < 200) { (*cnt)++; } 		// increment counter
+	else if (~input == 0 && *cnt > 0) { (*cnt)--; }    	// decrement counter
 
 	if (*btn_lock == 0){
 
-		if (*cnt > 0x64) {
+		if (*cnt > 100) {
 
-			*btn_lock = 1;	// lock btn until released
-			return 1;		// send one-shot
+			*btn_lock = 1;			// lock btn until released
+			return TRUE;				// send one-shot
 		}
 	}
 	else if (*btn_lock == 1) {
 
-		if (*cnt <= 0x64) {
+		if (*cnt <= 100) {
 
-			*btn_lock = 0;
+			*btn_lock = 0;			// release lock
 		}
 	}
 
-	return 0;
+	return FALSE;
 }
 
 /***************************************************************************************************************************************/

@@ -10,13 +10,7 @@
 
 
 #include "main.h"
-#include "PWM.h"
 #include "ADC.h"
-
-#include "cmsis_gcc.h"
-#include "stm32f303xe.h"
-
-#include <stdint.h>
 
 
 extern int ms_done_flag;

@@ -9,17 +9,13 @@
 #define DMA_H_
 
 
-#include <stdint.h>
-
-#include "stm32f303xe.h"
-
+#include "main.h"
 #include "ADC.h"
-
 
 
 extern void DMA_CH1_config(void);
 
-void DMA_CH1_set_write_addr(uint32_t *addr);
+extern void DMA_CH1_set_write_addr(uint16_t *addr);
 
 
 

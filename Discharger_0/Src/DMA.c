@@ -28,7 +28,7 @@ void DMA_CH1_config(void) {
 }
 
 
-void DMA_CH1_set_write_addr(uint32_t *addr){
+void DMA_CH1_set_write_addr(uint16_t *addr){
 
 	DMA1_Channel1->CCR &= ~0x1;		// Disable DMA1 CH1 to be able to write to mem addr
 
