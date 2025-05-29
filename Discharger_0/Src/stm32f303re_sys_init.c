@@ -81,7 +81,8 @@ void GPIOConfig(void){
 
 	GPIOA->MODER |= 0x3;		 	// Set ADC1_CH1 input PA0 to analog mode
 	GPIOA->MODER |= (0x3 << 2);		// Set ADC1_CH2 input PA1 to analog mode
-	GPIOA->MODER |= (0x3 << 6);		// Set ADC1_CH4 input PA3 to analog mode
+	GPIOA->MODER |= (0x3 << 4);		// Set ADC1_CH3 input PA2 to analog mode
+	//GPIOA->MODER |= (0x3 << 6);		// Set ADC1_CH4 input PA3 to analog mode
 
 	GPIOA->MODER &= ~(0x3 << 16);	// Set PA8 to input for batt check
 	GPIOA->PUPDR |= (0x2 << 16); 	// Config PA8 for pulldown
@@ -121,7 +122,7 @@ void GPIOConfig(void){
 
 BOOL BattCheck(void){
 
-	return (BOOL)((GPIOA->IDR & 0x8) >> 8);
+	return (BOOL)((GPIOA->IDR & 0x100) >> 8);
 
 }
 
@@ -153,14 +154,17 @@ void TIMConfig(void){
 
 	RCC -> APB1ENR |= RCC_APB1ENR_TIM4EN;				// Enable TIM4 clock
 
+	TIM4->CR1 |= TIM_CR1_OPM;							// One pulse mode
 	TIM4->CR1 |= TIM_CR1_URS; 							// Only overflow gen UEV
 	TIM4->DIER |= TIM_DIER_UIE;							// EN UEV IRQ
 	TIM4->PSC |= 0xFA;									// Set prescaler to 250
 	TIM4->ARR = sys_clk / 0xFA / ADC1_CH1_burst_freq;	// Load timer with burst freq value
 
 	NVIC_SetPriority(TIM4_IRQn, 0x4);					//Set TIM4 IRQ priority in the NVIC
+	NVIC_EnableIRQ(TIM4_IRQn);							// Enable TIM4 IRQ
 
-	TIM4->CR1 |= 0x1;									// Start timer
+
+	//TIM4->CR1 |= 0x1;									// Start timer
 
 
 }
@@ -179,7 +183,9 @@ int ADC_INIT(void){				// PG 380 for adc calcs
 	ADC1 -> CR &= (0 << 29);	// first place ADC voltage regulator in intermediate state
 	ADC1 -> CR |= (1 << 28);	// enable ADC1 vreg
 
-	Millisec(T_ADC_VREG_STARTUP); // Wait 11uS for vreg startup
+	for(uint16_t i = 0; i <= 800; i++);		// Wait for vreg startup
+
+	//Millisec(T_ADC_VREG_STARTUP); // Wait 11uS for vreg startup
 
 	ADC12_COMMON -> CCR |= (1 << 22);	// Enable Vrefint channel
 

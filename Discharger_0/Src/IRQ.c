@@ -54,7 +54,6 @@ void Heartbeat(void){
 
 /* Timer for PWM*/
 
-
 void TIM2_IRQHandler(void){
 
 
@@ -80,12 +79,12 @@ void TIM3_IRQHandler(void){
 
 void TIM4_IRQHandler(void){
 
-	TIM4->SR &= ~0x1;																				// Clr IRQ flag
+	TIM4->SR &= ~0x1;																					// Clr IRQ flag
 
-	if (Process_Vars_Handle->ADC_Burst_Running == 0x0 && Process_Vars_Handle->ADC1_Idle == 0x1){	// If burst not running and ADC1 idle
+	if (Process_Vars_Handle->ADC_CAPTURES_RUNNING == FALSE && ADC1_HANDLE->ADC1_IDLE == TRUE){			// If burst not running and ADC1 idle
 
-		ADC1_HANDLE->ADC1_NEXT_CH = 0x1;															// Reset to first ADC1 CH
-		Process_Vars_Handle->ADC_Burst_Running = 0x1;												// Start ADC1 burst
+		ADC1_HANDLE->ADC1_CURRENT_CAPTURE = 1;															// Reset to first ADC1 CH
+		Process_Vars_Handle->ADC_CAPTURES_RUNNING = TRUE;												// Start ADC1 burst
 	}
 
 }
@@ -103,7 +102,8 @@ void ADC1_2_IRQHandler(void){
 			ADC1->ISR |= 0x1;								// Clr IRQ flags
 			ADC1_Clr_Pend_Irq();							// Clr pending IRQ
 
-			Process_Vars_Handle->ADC1_Idle = 0x1;			// ADC1 conv done
+			ADC1_HANDLE->ADC1_CURRENT_CAPTURE++;			// Iterate to next capture
+			ADC1_HANDLE->ADC1_IDLE = TRUE;			// ADC1 conv done
 
 			break;
 
@@ -114,8 +114,8 @@ void ADC1_2_IRQHandler(void){
 			ADC1->ISR |= 0x1;								// Clr IRQ flags
 			ADC1_Clr_Pend_Irq();							// Clr pending IRQ
 
-			Process_Vars_Handle->ADC1_CH1_Data_Good = 0x0;	// ADC1 bad data
-			Process_Vars_Handle->ADC1_Idle = 0x1;			// ADC1 done
+			ADC1_HANDLE->ADC1_DATA_GOOD = FALSE;	// ADC1 bad data
+			ADC1_HANDLE->ADC1_IDLE = TRUE;			// ADC1 done
 
 			break;
 
@@ -125,8 +125,8 @@ void ADC1_2_IRQHandler(void){
 			ADC1->ISR |= 0x1;								// Clr IRQ flags
 			ADC1_Clr_Pend_Irq();							// Clr pending IRQ
 
-			Process_Vars_Handle->ADC1_CH1_Data_Good = 0x0;	// ADC1 bad data
-			Process_Vars_Handle->ADC1_Idle = 0x1;			// ADC1 done
+			ADC1_HANDLE->ADC1_DATA_GOOD = FALSE;	// ADC1 bad data
+			ADC1_HANDLE->ADC1_IDLE = TRUE;			// ADC1 done
 
 	}
 

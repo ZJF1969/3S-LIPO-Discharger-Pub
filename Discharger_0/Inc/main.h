@@ -28,13 +28,11 @@ typedef struct Process_Vars_Obj {		// Create struct type to store main process v
 	BOOL SYS_ON;
 	BOOL BATT_GOOD;
 
-	uint8_t ADC1_Idle;
-	uint8_t ADC1_CH1_Data_Good;
-	uint8_t ADC_Burst_Running;
+	BOOL ADC_CAPTURES_RUNNING;			// Capture bursts running flag
 
-	float V_C1;					// Cell 1 (TOP) voltage
-	float V_C2;					// Cell 2 (MID) voltage
-	float V_C3;					// Cell 3 (BOT) voltage
+	float V_C1;							// Cell 1 (TOP) voltage
+	float V_C2;							// Cell 2 (MID) voltage
+	float V_C3;							// Cell 3 (BOT) voltage
 
 
 } Process_Vars_Obj_Alias;
@@ -46,7 +44,7 @@ extern uint8_t Process_Vars_Obj_init(void *pMemory, Process_Vars_Obj_Alias obj);
 
 /***************************************************************************************************************************************/
 
-extern BOOL Debounce(uint16_t input, int *cnt, int *btn_lock);
+extern BOOL Debounce(uint8_t input, int *cnt, int *btn_lock);
 
 extern void Millisec(float microSec);
 

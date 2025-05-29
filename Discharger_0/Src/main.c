@@ -26,7 +26,7 @@
 #define GetPeriod(x) (1 / (float)x)
 
 
-const uint32_t SYS_clk;
+const uint32_t SYS_clk = 72000000;
 
 
 /***************************************************************************************************************************************/
@@ -62,7 +62,7 @@ void (*State_ptr)(void);       // State machine pointer
 
 int PC13_cnt = 0;		// Debounce vars
 int PC13_lock = 0;
-BOOL PC13_pressed = 0;
+BOOL PC13_pressed = FALSE;
 
 int state = 0;			// Error catch
 
@@ -100,13 +100,6 @@ int main(void){
 	state = ADC1_Param_Setup();
 	if (state == 1) { A2(); }
 
-	ADC1_IRQ_EN();							// EN ADC1 IRQs
-
-	Process_Vars_Handle->ADC1_Idle = 0x1;	// ADC is idle
-
-
-	//state = ADC1_Cycle_Start();
-	//if (state == 1) { A2(); }
 
 
 	while(1) {
@@ -121,14 +114,20 @@ int main(void){
 
 		if (PC13_pressed == TRUE && Process_Vars_Handle->SYS_ON == FALSE){
 
-			Process_Vars_Handle->SYS_ON = TRUE;
-			State_ptr = &A0;
+			if(BattCheck() == TRUE){
+
+				Process_Vars_Handle->SYS_ON = TRUE;
+				State_ptr = &A0;
+
+			}
 
 		}
 		else if(PC13_pressed == TRUE && Process_Vars_Handle->SYS_ON == TRUE){
 
 			Process_Vars_Handle->SYS_ON = FALSE;
 			State_ptr = &B0;
+
+			// Shut down state
 
 			// TURN OFF LED
 
@@ -145,82 +144,106 @@ int main(void){
 
 /***************************************************************************************************************************************/
 
-/*	Startup state  			*/
-/*	Turn LED, batt check	*/
+/* Startup state */
 
 void A0(void){
 
-	// TURN ON LED
+	// Turn on LED
 
+	ADC1_IRQ_EN();							// EN ADC1 IRQs
 
-	//if(BATT_CHECK() == TRUE){
+	ADC1_HANDLE->ADC1_IDLE = TRUE;
+	ADC1_HANDLE->ADC1_DATA_GOOD = TRUE;
 
-		State_ptr = &A1;
+	state = ADC1_Cycle_Start();		// Get cell voltages
+	if (state == 1) { A2(); }
 
-	//}
+	State_ptr = &A1;
+
 
 }
 
 /***************************************************************************************************************************************/
 
-/*	Running state  */
+/*	Capture state  */
 
 void A1(void){
 
 	uint8_t result = 0;
 
-	if (Process_Vars_Handle->ADC_Burst_Running == 0x1 && Process_Vars_Handle->ADC1_Idle == 0x1){		// If ADC1 burst running and ADC1 conv done
+	if (Process_Vars_Handle->ADC_CAPTURES_RUNNING == TRUE &&
+			ADC1_HANDLE->ADC1_IDLE == TRUE &&
+			ADC1_HANDLE->ADC1_DATA_GOOD == TRUE){				// If ADC1 burst running and ADC1 conv done and
 
-		Process_Vars_Handle->ADC1_Idle = 0x0;
+		ADC1_HANDLE->ADC1_IDLE = FALSE;												// Ready to start a conv
 
-		if (ADC1_HANDLE->ADC1_NEXT_CH == 0x1){
+		switch (ADC1_HANDLE->ADC1_CURRENT_CAPTURE) {
 
-			result = ADC1_Start_Conv(ADC1_HANDLE->ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Start ADC1 CH1 conv
-			if(result == 1){ /*set error*/ }
-			
-			ADC1_HANDLE->ADC1_NEXT_CH = 0x2;					// Set next channel
+			case 1:
 
-		}
-		else if (ADC1_HANDLE->ADC1_NEXT_CH == 0x2){
-			
-			result = ADC1_Start_Conv(ADC1_HANDLE->ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Start ADC1 CH2 conv
-			if(result == 1){ /*set error*/ }
-			
-			ADC1_HANDLE->ADC1_NEXT_CH = 0x4;					// Set next channel
+				result = ADC1_Start_Conv(1, &ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Start ADC1 CH1 conv, VC1
+				if(result == 1){ /*set error*/ }
 
-		}
-		else if (ADC1_HANDLE->ADC1_NEXT_CH == 0x4){
-			
-			result = ADC1_Start_Conv(ADC1_HANDLE->ADC1_NEXT_CH, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH4 conv
-			if(result == 1){ /*set error*/ }
+				break;
 
-			ADC1_HANDLE->ADC1_NEXT_CH = 0x1;					// Reset next channel
-			Process_Vars_Handle->ADC_Burst_Running = 0x0;		// ADC1 burst done
+
+			case 2:
+
+				result = ADC1_Start_Conv(2, &ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Start ADC1 CH2 conv, VC2
+				if(result == 1){ /*set error*/ }
+
+				break;
+
+
+			case 3:
+
+				result = ADC1_Start_Conv(3, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH3 conv, VC3
+				if(result == 1){ /*set error*/ }
+
+				break;
+
+
+			case 4:
+
+				/*
+				result = ADC1_Start_Conv(4, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH4 conv, NTC
+				if(result == 1){ /*set error }
+				*/
+
+				ADC1_HANDLE->ADC1_IDLE = TRUE;										// Reverse to IDLE
+				Process_Vars_Handle->ADC_CAPTURES_RUNNING = FALSE;					// ADC captures done, TODO move this to case 5 and add in ADC CH4
+				State_ptr = &A1;
+
+				state = ADC1_Cycle_Start();
+				if (state == 1) { A2(); }
+
+				break;
+
+
+			default:
+
+				/* Error Catch */
+
+				ADC1_HANDLE->ADC1_DATA_GOOD = FALSE;
+				Process_Vars_Handle->ADC_CAPTURES_RUNNING = FALSE;
+				ADC1_HANDLE->ADC1_IDLE = TRUE;
+
+				break;
+
 
 		}
 
 	}
 
-
-
-	/*
-
-	if ((Process_Vars_Handle->ADC1_Idle & Process_Vars_Handle->ADC1_CH1_Data_Good) == 0x1) {
-
-		ADC1_Process_Data();
-		State_ptr = &B2;
-
-	}
-*/
 }
 
 /***************************************************************************************************************************************/
 
 /*	Burst finished, process data, move to reset state	*/
 
-void A3(void){
+void A2(void){
 
-	ADC1_Process_Data();
+	//ADC1_Process_Data();
 
 	State_ptr = &B2;
 
@@ -233,7 +256,7 @@ void A3(void){
 
 uint32_t diag_A2 = 0;
 
-void A2(void){
+void A3(void){
 
 	while(1);	// Get stuck for diag
 
@@ -251,28 +274,14 @@ void B0(void){
 
 /***************************************************************************************************************************************/
 
-/*	ADC1 wait and burst check state  */
-/*
+/*	Process Data State  */
+
 void B1(void){
 
-	if (ADC1_HANDLE->ADC1_EOC == 1){
 
-		if (ADC1_HANDLE->ADC1_CH1_N == ADC1_N_BURST_CONST) {		// Wait for conv burst done
-
-			ADC1_HANDLE->ADC1_EOC = 0;	// Reset EOC flag for main loop
-			State_ptr = &A3;	// Move to done state
-
-			return;
-
-		}
-
-		ADC1_HANDLE->ADC1_EOC = 0;	// Reset EOC flag for main loop
-		State_ptr = &A1;				// Move to running state
-
-	}
 
 }
-*/
+
 /***************************************************************************************************************************************/
 
 float new_d = 30;
@@ -308,11 +317,12 @@ uint8_t Process_Vars_Obj_init(void *pMemory, Process_Vars_Obj_Alias obj){
 
 /* Setup for one-shot */
 /* Debounce is 200 counts max, high if > 100, low if < 100 */
+/* Input is active low */
 
-BOOL Debounce(uint16_t input, int *cnt, int *btn_lock){
+BOOL Debounce(uint8_t input, int *cnt, int *btn_lock){
 
-	if (~input == 1 && *cnt < 200) { (*cnt)++; } 		// increment counter
-	else if (~input == 0 && *cnt > 0) { (*cnt)--; }    	// decrement counter
+	if (input == 0 && *cnt < 200) { (*cnt)++; } 		// increment counter
+	else if (input == 1 && *cnt > 0) { (*cnt)--; }    	// decrement counter
 
 	if (*btn_lock == 0){
 

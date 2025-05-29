@@ -25,8 +25,9 @@ Current Config:
 
 	- ADC1_CH1 -> PA0 / A0
 	- ADC1_CH2 -> PA1 / A1
+	- ADC1_CH3 -> PA2 / D1
 	- ADC1_CH4 -> PA3 / D0
-	
+
 	- Batt Check -> PA8 / D7
 	
 	- Heartbeat LED -> PA5 / D13

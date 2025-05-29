@@ -12,6 +12,8 @@
 
 uint32_t ADC1_CH1_burst_freq = 5;
 
+const uint8_t ADC1_TOTAL_CAPTURES = 5;
+
 
 uint32_t ADC1_IRQ_MASK = 0;
 
@@ -168,7 +170,8 @@ int ADC1_Cycle_Start(void){
 	if ( (	((ADC1 -> CR & 0x1)) &						// Check for ADC1 EN
 			(~((ADC1 -> CR >> 1) & 0x1))) == 1) {		// Check for no DIS request
 
-		NVIC_EnableIRQ(TIM4_IRQn);					// Enable TIM4 IRQ to start ADC1 cycle
+		//NVIC_EnableIRQ(TIM4_IRQn);					// Enable TIM4 IRQ to start ADC1 cycle
+		TIM4->CR1 |= 0x1;
 
 		return 0;
 

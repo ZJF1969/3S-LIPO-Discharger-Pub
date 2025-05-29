@@ -18,6 +18,7 @@
 
 #define ADC1_N_BURST_CONST	10	// Num samples each ADC1 CH1 burst sequence
 
+extern const uint8_t ADC1_TOTAL_CAPTURES;
 
 extern uint32_t ADC1_CH1_sample_freq;
 extern uint32_t ADC1_CH1_burst_freq;
@@ -29,7 +30,10 @@ extern uint32_t ADC1_IRQ_MASK;
 
 typedef struct ADC1_OBJ {		// Create struct type to store ADC1 CH1 vars
 
-	uint8_t ADC1_NEXT_CH;							// Current CH selected for sampling burst
+	BOOL ADC1_IDLE;						// ADC1 idle, not converting flag
+	BOOL ADC1_DATA_GOOD;				// ADC1 error flag for inter capture routine catching
+
+	uint8_t ADC1_CURRENT_CAPTURE;					// Iterate var to track which input to capture
 
 	uint16_t ADC1_CH1_DATA[ADC1_N_BURST_CONST];		// CH1 data buffer
 	uint16_t ADC1_CH2_DATA[ADC1_N_BURST_CONST];		// CH2 data buffer
