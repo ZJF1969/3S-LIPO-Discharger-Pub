@@ -197,7 +197,7 @@ void A1(void){
 
 			case 3:
 
-				result = ADC1_Start_Conv(3, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH3 conv, VC3
+				result = ADC1_Start_Conv(6, &ADC1_HANDLE->ADC1_CH6_DATA[0]);		// Start ADC1 CH3 conv, VC3
 				if(result == 1){ /*set error*/ }
 
 				break;
@@ -212,7 +212,7 @@ void A1(void){
 
 				ADC1_HANDLE->ADC1_IDLE = TRUE;										// Reverse to IDLE
 				Process_Vars_Handle->ADC_CAPTURES_RUNNING = FALSE;					// ADC captures done, TODO move this to case 5 and add in ADC CH4
-				State_ptr = &A1;
+				State_ptr = &B1;
 
 				state = ADC1_Cycle_Start();
 				if (state == 1) { A2(); }
@@ -239,13 +239,11 @@ void A1(void){
 
 /***************************************************************************************************************************************/
 
-/*	Burst finished, process data, move to reset state	*/
+/*		*/
 
 void A2(void){
 
-	//ADC1_Process_Data();
 
-	State_ptr = &B2;
 
 }
 
@@ -277,6 +275,14 @@ void B0(void){
 /*	Process Data State  */
 
 void B1(void){
+
+	Process_Vars_Handle->V_C1 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH1_DATA);
+
+	Process_Vars_Handle->V_C2 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH2_DATA);
+
+	Process_Vars_Handle->V_C3 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH6_DATA);
+
+	State_ptr = &A1;
 
 
 

@@ -44,7 +44,7 @@ void SysInit(void) {
 	while ((RCC -> CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
 
 	RCC -> APB1ENR |= RCC_APB1ENR_PWREN;	// Power interface clk EN
-	RCC -> APB2ENR |= 0x1;					// SYSCFG clk EN
+	//RCC -> APB2ENR |= 0x1;					// SYSCFG clk EN
 
 	FPUInit();
 
@@ -81,8 +81,9 @@ void GPIOConfig(void){
 
 	GPIOA->MODER |= 0x3;		 	// Set ADC1_CH1 input PA0 to analog mode
 	GPIOA->MODER |= (0x3 << 2);		// Set ADC1_CH2 input PA1 to analog mode
-	GPIOA->MODER |= (0x3 << 4);		// Set ADC1_CH3 input PA2 to analog mode
+	//GPIOA->MODER |= (0x3 << 4);		// Set ADC1_CH3 input PA2 to analog mode
 	//GPIOA->MODER |= (0x3 << 6);		// Set ADC1_CH4 input PA3 to analog mode
+	GPIOC->MODER |= 0x3;			// Set ADC12_CH6 input PC0 to analog mode
 
 	GPIOA->MODER &= ~(0x3 << 16);	// Set PA8 to input for batt check
 	GPIOA->PUPDR |= (0x2 << 16); 	// Config PA8 for pulldown
@@ -212,9 +213,9 @@ void DMA1_init(void){
 void OPAMP_init(void){
 
 	//OPAMP1->CSR |= 0x1;		// EN OPAMP1
-	OPAMP2->CSR |= 0x1;		// EN OPAMP2
-	OPAMP3->CSR |= 0x1;		// EN OPAMP3
-	OPAMP4->CSR |= 0x1; 	// EN OPAMP4
+	//OPAMP2->CSR |= 0x1;		// EN OPAMP2
+	//OPAMP3->CSR |= 0x1;		// EN OPAMP3
+	//OPAMP4->CSR |= 0x1; 	// EN OPAMP4
 
 	//OPAMP1->CSR &= (0b00 << 2);		// Map OPAMP1 non-inv input to PA7
 	//OPAMP1->CSR |= (0x3 << 5); 		// Set OPAMP1 to follower mode, non inv input

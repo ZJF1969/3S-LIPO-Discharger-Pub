@@ -37,7 +37,7 @@ typedef struct ADC1_OBJ {		// Create struct type to store ADC1 CH1 vars
 
 	uint16_t ADC1_CH1_DATA[ADC1_N_BURST_CONST];		// CH1 data buffer
 	uint16_t ADC1_CH2_DATA[ADC1_N_BURST_CONST];		// CH2 data buffer
-	uint16_t ADC1_CH4_DATA[ADC1_N_BURST_CONST];		// CH4 data buffer
+	uint16_t ADC1_CH6_DATA[ADC1_N_BURST_CONST];		// CH4 data buffer
 
 	float ADC1_AIN;									// Voltage value result of burst avg calc
 
@@ -65,7 +65,7 @@ extern int ADC1_Param_Setup(void);
 
 extern void ADC1_Set_Seq(uint8_t ch);
 
-extern int ADC1_Cal(int mode); //proto
+extern int ADC1_Cal(int mode);
 
 extern int ADC1_Cycle_Start(void);
 extern void ADC1_Cycle_Stop(void);
@@ -74,7 +74,8 @@ extern uint8_t ADC1_Start_Conv(uint8_t ch, uint16_t *buffer);
 
 extern int GetVDDA(void);
 
-extern void ADC1_Process_Data(void);
+extern float ADC1_Process_Data(uint16_t buffer[]);
+
 
 
 

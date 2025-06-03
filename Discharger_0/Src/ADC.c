@@ -108,7 +108,12 @@ int ADC1_Param_Setup(void){
 
 	if (!((ADC1 -> CR >> 2) & 0x1)) {		// Check for no Conver in progress
 
-		ADC1 -> SMPR1 |= (0x4 << 3);		// Set CH1 sample time to 19.5 clk cycles, 2.25MHz Fs
+		ADC1->SMPR1 |= (0x4 << 3);		// Set CH1 sample time to 19.5 clk cycles, 2.25MHz Fs
+		ADC1->SMPR1 |= (0x4 << 6);		// Set CH2
+		ADC1->SMPR1 |= (0x4 << 18);		// Set CH6
+
+		//ADC1->SMPR1 |= (0x2 << 6);
+		//ADC1->SMPR1 |= (0x3 << 18);
 
 		ADC1->CFGR |= 0x1;					// EN DMA for ADC1
 		ADC1->CFGR |= (0x1 << 1);			// EN DMA circular mode
@@ -244,26 +249,25 @@ int GetVDDA(void){
 
 }
 
-/***************************************************************************************************************************************
+/***************************************************************************************************************************************/
 
-void ADC1_Process_Data(void){
+float ADC1_Process_Data(uint16_t buffer[]){
 
 	float val = 0;
 	float accum = 0;
 
-	for (uint8_t i = 0; i < ADC1_N_BURST_CONST; i++){
+	for (uint8_t i = 0; i < ADC1_N_BURST_CONST; i++){	// Iterate through buffer
 
-		val = VDDA_Meas / ADC1_Res * ADC1_HANDLE->ADC1_DATA[i];
-
-		accum = accum + val;
+		val = VDDA_Meas / ADC1_Res * buffer[i];			// Calc voltage
+		accum = accum + val;							// Accum for average
 
 	}
 
-	ADC1_HANDLE->ADC1_AIN = accum / ADC1_N_BURST_CONST;
+	return accum / ADC1_N_BURST_CONST;					// Return the average
 
 }
 
-***************************************************************************************************************************************/
+/***************************************************************************************************************************************/
 
 
 
