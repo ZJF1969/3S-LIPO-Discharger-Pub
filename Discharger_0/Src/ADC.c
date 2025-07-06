@@ -10,7 +10,7 @@
 
 #define ADC1_Res	4095	// Configure ADC1 for 12-bit resolution
 
-uint32_t ADC1_CH1_burst_freq = 5;
+const uint32_t ADC1_CH1_BURST_FREQ = 10;		// Hz,
 
 const uint8_t ADC1_TOTAL_CAPTURES = 5;
 
@@ -166,9 +166,9 @@ int ADC1_Cal(int mode){
 
 }
 
-/***************************************************************************************************************************************/
+/***************************************************************************************************************************************
 
-/*	Start TIM4 to run burst of conv every 200mS	  */
+/*	Start TIM4 to run burst of conv at ADC1_CH1_BURST_FREQ
 
 int ADC1_Cycle_Start(void){
 

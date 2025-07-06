@@ -27,12 +27,15 @@ typedef struct Process_Vars_Obj {		// Create struct type to store main process v
 
 	BOOL SYS_ON;
 	BOOL BATT_GOOD;
+	BOOL DISCHARGE_ON;
 
 	BOOL ADC_CAPTURES_RUNNING;			// Capture bursts running flag
 
 	float V_C1;							// Cell 1 (TOP) voltage
 	float V_C2;							// Cell 2 (MID) voltage
 	float V_C3;							// Cell 3 (BOT) voltage
+
+	float Current_Setpoint;				// Either coarse or fine setpoint used in logic
 
 
 } Process_Vars_Obj_Alias;

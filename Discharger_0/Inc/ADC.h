@@ -21,7 +21,7 @@
 extern const uint8_t ADC1_TOTAL_CAPTURES;
 
 extern uint32_t ADC1_CH1_sample_freq;
-extern uint32_t ADC1_CH1_burst_freq;
+extern const uint32_t ADC1_CH1_BURST_FREQ;
 
 extern uint32_t ADC1_IRQ_MASK;
 

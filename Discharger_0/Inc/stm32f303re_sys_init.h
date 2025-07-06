@@ -24,6 +24,8 @@ extern BOOL BattCheck(void);
 
 extern void TIMConfig(void);
 
+extern void start_cell_check_timer(void);
+
 extern int ADC_INIT(void);
 
 extern void DMA1_init(void);

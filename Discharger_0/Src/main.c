@@ -26,7 +26,10 @@
 #define GetPeriod(x) (1 / (float)x)
 
 
-const uint32_t SYS_clk = 72000000;
+const uint32_t SYS_CLK = 72000000;
+
+const float COARSE_SETPOINT = 3.8;
+const float FINE_SETPOINT = 3.75;
 
 
 /***************************************************************************************************************************************/
@@ -120,6 +123,11 @@ int main(void){
 				State_ptr = &A0;
 
 			}
+			else{
+
+				// Hold ERROR LED on for a while
+
+			}
 
 		}
 		else if(PC13_pressed == TRUE && Process_Vars_Handle->SYS_ON == TRUE){
@@ -148,18 +156,102 @@ int main(void){
 
 void A0(void){
 
-	// Turn on LED
-
 	ADC1_IRQ_EN();							// EN ADC1 IRQs
 
 	ADC1_HANDLE->ADC1_IDLE = TRUE;
 	ADC1_HANDLE->ADC1_DATA_GOOD = TRUE;
+	ADC1_HANDLE->ADC1_CURRENT_CAPTURE = 1;						// Reset to first ADC1 CH
 
-	state = ADC1_Cycle_Start();		// Get cell voltages
-	if (state == 1) { A2(); }
+	Process_Vars_Handle->ADC_CAPTURES_RUNNING = TRUE;			// Start ADC1 burst
 
-	State_ptr = &A1;
+	B0();		// Get Vcells
+	B1();		// Process vals
 
+	if (Process_Vars_Handle->V_C1 > 3.75 || Process_Vars_Handle->V_C2 > 3.75 || Process_Vars_Handle->V_C3 > 3.75){		// Check if discharge is applicable.
+
+		if (Process_Vars_Handle->V_C1 < 3.6 || Process_Vars_Handle->V_C2 < 3.6 || Process_Vars_Handle->V_C3 < 3.6){		// Check for out of range / damaged cells
+
+			//State_ptr = ERROR STATE
+
+		}
+
+		if (Process_Vars_Handle->V_C1 < 3.8 || Process_Vars_Handle->V_C2 < 3.8 || Process_Vars_Handle->V_C3 < 3.8){
+
+			Process_Vars_Handle->Current_Setpoint = FINE_SETPOINT;		// Set to fine setpoint if close to done
+
+		}
+		else{
+
+			Process_Vars_Handle->Current_Setpoint = COARSE_SETPOINT;	// Otherwise use coarse setpoint
+
+		}
+
+
+		// Turn on LED
+		State_ptr = &A1;	// Start main logic
+
+	}
+	else{
+
+		//State_ptr = DONE STATE // No discharge needed
+
+	}
+}
+
+/***************************************************************************************************************************************/
+
+/* Service State */
+
+void A1(void){
+
+	if (Process_Vars_Handle->DISCHARGE_ON == FALSE){
+
+		Process_Vars_Handle->DISCHARGE_ON = TRUE;
+		// START DISCHARGE
+
+	}
+
+	start_cell_check_timer();
+
+	state_ptr = &B0;			// Go to capture state
+
+
+
+
+}
+
+/***************************************************************************************************************************************/
+
+/* Running State */
+
+void A2(void){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+/***************************************************************************************************************************************/
+
+
+/*	Error state  */
+
+uint32_t diag_A2 = 0;
+
+void A3(void){
+
+	while(1);	// Get stuck for diag
 
 }
 
@@ -167,13 +259,13 @@ void A0(void){
 
 /*	Capture state  */
 
-void A1(void){
+void B0(void){
 
 	uint8_t result = 0;
 
 	if (Process_Vars_Handle->ADC_CAPTURES_RUNNING == TRUE &&
 			ADC1_HANDLE->ADC1_IDLE == TRUE &&
-			ADC1_HANDLE->ADC1_DATA_GOOD == TRUE){				// If ADC1 burst running and ADC1 conv done and
+			ADC1_HANDLE->ADC1_DATA_GOOD == TRUE){				// If ADC1 burst running and ADC1 conv done and data ok so far
 
 		ADC1_HANDLE->ADC1_IDLE = FALSE;												// Ready to start a conv
 
@@ -212,10 +304,10 @@ void A1(void){
 
 				ADC1_HANDLE->ADC1_IDLE = TRUE;										// Reverse to IDLE
 				Process_Vars_Handle->ADC_CAPTURES_RUNNING = FALSE;					// ADC captures done, TODO move this to case 5 and add in ADC CH4
-				State_ptr = &B1;
+				State_ptr = &A1;
 
-				state = ADC1_Cycle_Start();
-				if (state == 1) { A2(); }
+				//state = ADC1_Cycle_Start();
+				//if (state == 1) { A2(); }
 
 				break;
 
@@ -239,40 +331,6 @@ void A1(void){
 
 /***************************************************************************************************************************************/
 
-/*		*/
-
-void A2(void){
-
-
-
-}
-
-/***************************************************************************************************************************************/
-
-
-/*	Error state  */
-
-uint32_t diag_A2 = 0;
-
-void A3(void){
-
-	while(1);	// Get stuck for diag
-
-}
-
-/***************************************************************************************************************************************/
-
-/*	Idle state  */
-/*	Do nothing	*/
-
-void B0(void){
-
-
-}
-
-/***************************************************************************************************************************************/
-
-/*	Process Data State  */
 
 void B1(void){
 
@@ -290,16 +348,9 @@ void B1(void){
 
 /***************************************************************************************************************************************/
 
-float new_d = 30;
+/*	Process Data State  */
 
 void B2(void){
-
-	new_d = (ADC1_HANDLE->ADC1_AIN * 0.25) + 0.175;
-
-	//UpdatePWM(new_d);
-
-	State_ptr = &A1;
-
 
 }
 
@@ -353,7 +404,7 @@ BOOL Debounce(uint8_t input, int *cnt, int *btn_lock){
 
 void Millisec(float microSec){
 
-	TIM3 -> ARR = (microSec / 1000000) / GetPeriod(SYS_clk); //load TIM3 counter
+	TIM3 -> ARR = (microSec / 1000000) / GetPeriod(SYS_CLK); //load TIM3 counter
 	TIM3 -> CR1 |= 1; //start timer
 
 	while(!ms_done_flag);

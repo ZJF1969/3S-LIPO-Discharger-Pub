@@ -159,7 +159,7 @@ void TIMConfig(void){
 	TIM4->CR1 |= TIM_CR1_URS; 							// Only overflow gen UEV
 	TIM4->DIER |= TIM_DIER_UIE;							// EN UEV IRQ
 	TIM4->PSC |= 0xFA;									// Set prescaler to 250
-	TIM4->ARR = sys_clk / 0xFA / ADC1_CH1_burst_freq;	// Load timer with burst freq value
+	TIM4->ARR = sys_clk / 0xFA / ADC1_CH1_BURST_FREQ;	// Load timer with burst freq value
 
 	NVIC_SetPriority(TIM4_IRQn, 0x4);					//Set TIM4 IRQ priority in the NVIC
 	NVIC_EnableIRQ(TIM4_IRQn);							// Enable TIM4 IRQ
@@ -167,6 +167,14 @@ void TIMConfig(void){
 
 	//TIM4->CR1 |= 0x1;									// Start timer
 
+
+}
+
+/***************************************************************************************************************************************/
+
+void start_cell_check_timer(void){
+
+	TIM4->CR1 |= 0x1;
 
 }
 
