@@ -41,33 +41,22 @@ Process_Vars_Obj_Alias *Process_Vars_Handle;	// Define struct obj pointer to typ
 
 /***************************************************************************************************************************************/
 
-/*	State Machine function prototypes  */
-
-// Alpha states
-void A0(void);  //state A0
-void A1(void);  //state A1
-void A2(void);  //state A2
-void A3(void);
-
-// Beta states
-void B0(void);
-void B1(void);
-void B2(void);
-
-/***************************************************************************************************************************************/
-
-/*	State machine function pointers */
-
-void (*State_ptr)(void);       // State machine pointer
-
-/***************************************************************************************************************************************/
-
-
 int PC13_cnt = 0;		// Debounce vars
 int PC13_lock = 0;
 BOOL PC13_pressed = FALSE;
 
 int state = 0;			// Error catch
+
+/***************************************************************************************************************************************/
+
+/* Main func declares */
+
+void startup_checks(void);
+void discharge_logic(void);
+void shutdown(void);
+void get_ADC_capture(void);
+void process_ADC_data(void);
+void error_catch(void);
 
 /***************************************************************************************************************************************/
 
@@ -86,22 +75,19 @@ int main(void){
 
 	DMA_CH1_config();
 
-	State_ptr = &B0;	// Set state machine entry to Idle state
-
-
 	/*	Setup ADC1	*/
 
 	state = ADC1_IRQ_Config();				// Setup ADC1 IRQs
-	if (state == 1) { A2(); }
+	if (state == 1) { error_catch(); }
 
 	state = EnableADC1();					// EN ADC1
-	if (state == 1) { A2(); }
+	if (state == 1) { error_catch(); }
 
 	state = GetVDDA();						// Sample the current VDDA (upper ref)
-	if (state == 1) { A2(); }
+	if (state == 1) { error_catch(); }
 
 	state = ADC1_Param_Setup();
-	if (state == 1) { A2(); }
+	if (state == 1) { error_catch(); }
 
 
 
@@ -119,8 +105,8 @@ int main(void){
 
 			if(BattCheck() == TRUE){
 
+				startup_checks();
 				Process_Vars_Handle->SYS_ON = TRUE;
-				State_ptr = &A0;
 
 			}
 			else{
@@ -133,18 +119,12 @@ int main(void){
 		else if(PC13_pressed == TRUE && Process_Vars_Handle->SYS_ON == TRUE){
 
 			Process_Vars_Handle->SYS_ON = FALSE;
-			State_ptr = &B0;
-
-			// Shut down state
+			// Shut down func
 
 			// TURN OFF LED
 
 		}
 
-
-		/*	Enter state machine	*/
-
-		(*State_ptr)();
 
 	}
 
@@ -152,9 +132,9 @@ int main(void){
 
 /***************************************************************************************************************************************/
 
-/* Startup state */
+/* Startup duties */
 
-void A0(void){
+void startup_checks(void){
 
 	ADC1_IRQ_EN();							// EN ADC1 IRQs
 
@@ -164,8 +144,8 @@ void A0(void){
 
 	Process_Vars_Handle->ADC_CAPTURES_RUNNING = TRUE;			// Start ADC1 burst
 
-	B0();		// Get Vcells
-	B1();		// Process vals
+	get_ADC_capture();		// Get Vcells
+	process_ADC_data();		// Process vals
 
 	if (Process_Vars_Handle->V_C1 > 3.75 || Process_Vars_Handle->V_C2 > 3.75 || Process_Vars_Handle->V_C3 > 3.75){		// Check if discharge is applicable.
 
@@ -188,7 +168,7 @@ void A0(void){
 
 
 		// Turn on LED
-		State_ptr = &A1;	// Start main logic
+		// Start main logic
 
 	}
 	else{
@@ -200,9 +180,9 @@ void A0(void){
 
 /***************************************************************************************************************************************/
 
-/* Service State */
+/* Main logic for discharge */
 
-void A1(void){
+void discharge_logic(void){
 
 	if (Process_Vars_Handle->DISCHARGE_ON == FALSE){
 
@@ -213,53 +193,26 @@ void A1(void){
 
 	start_cell_check_timer();
 
-	state_ptr = &B0;			// Go to capture state
-
-
 
 
 }
 
 /***************************************************************************************************************************************/
 
-/* Running State */
+/* Shutdown duties */
 
-void A2(void){
-
-
-
-
-
-
-
-
-
-
-
-
+void shutdown(void){
 
 
 
 }
 
-/***************************************************************************************************************************************/
-
-
-/*	Error state  */
-
-uint32_t diag_A2 = 0;
-
-void A3(void){
-
-	while(1);	// Get stuck for diag
-
-}
 
 /***************************************************************************************************************************************/
 
-/*	Capture state  */
+/* ADC capture */
 
-void B0(void){
+void get_ADC_capture(void){
 
 	uint8_t result = 0;
 
@@ -304,7 +257,7 @@ void B0(void){
 
 				ADC1_HANDLE->ADC1_IDLE = TRUE;										// Reverse to IDLE
 				Process_Vars_Handle->ADC_CAPTURES_RUNNING = FALSE;					// ADC captures done, TODO move this to case 5 and add in ADC CH4
-				State_ptr = &A1;
+				//State_ptr = &A1;
 
 				//state = ADC1_Cycle_Start();
 				//if (state == 1) { A2(); }
@@ -332,7 +285,7 @@ void B0(void){
 /***************************************************************************************************************************************/
 
 
-void B1(void){
+void process_ADC_data(void){
 
 	Process_Vars_Handle->V_C1 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH1_DATA);
 
@@ -340,17 +293,17 @@ void B1(void){
 
 	Process_Vars_Handle->V_C3 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH6_DATA);
 
-	State_ptr = &A1;
-
-
 
 }
 
 /***************************************************************************************************************************************/
 
-/*	Process Data State  */
+/* Error list / catch */
 
-void B2(void){
+void error_catch(void){
+
+	while(1);
+
 
 }
 
