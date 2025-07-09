@@ -25,6 +25,8 @@
 
 #define GetPeriod(x) (1 / (float)x)
 
+#define ever ;;
+
 
 const uint32_t SYS_CLK = 72000000;
 
@@ -91,8 +93,7 @@ int main(void){
 
 
 
-	while(1) {
-
+	for(ever){
 
 		// WATCHDOG
 

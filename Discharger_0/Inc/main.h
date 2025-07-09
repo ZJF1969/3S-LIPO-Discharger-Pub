@@ -47,6 +47,21 @@ extern uint8_t Process_Vars_Obj_init(void *pMemory, Process_Vars_Obj_Alias obj);
 
 /***************************************************************************************************************************************/
 
+/* Mapped ADC channels */
+
+enum ADC_Channels {
+
+	CH0,	// 0,	Cell 1
+	CH1,	// 1, 	Cell 2
+	CH2,	// 2, 	Cell 3
+	CH3,	// 3, 	Batt Current
+	CH4		// 4, 	NTC
+
+};
+
+
+/***************************************************************************************************************************************/
+
 extern BOOL Debounce(uint8_t input, int *cnt, int *btn_lock);
 
 extern void Millisec(float microSec);
