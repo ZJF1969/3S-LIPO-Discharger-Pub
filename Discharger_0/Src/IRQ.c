@@ -75,16 +75,16 @@ void TIM3_IRQHandler(void){
 
 /***************************************************************************************************************************************/
 
-/*	Timer for ADC1 bursts	*/
+/* Timer for ADC bursts */
 
 void TIM4_IRQHandler(void){
 
 	TIM4->SR &= ~0x1;																					// Clr IRQ flag
 
-	if (Process_Vars_Handle->ADC_CAPTURES_RUNNING == FALSE && ADC1_HANDLE->ADC1_IDLE == TRUE){			// If burst not running and ADC1 idle
+	if (PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING == FALSE && ADC1_HANDLE->ADC1_IDLE == TRUE){			// If burst not running and ADC idle
 
 		ADC1_HANDLE->ADC1_CURRENT_CAPTURE = 1;															// Reset to first ADC1 CH
-		Process_Vars_Handle->ADC_CAPTURES_RUNNING = TRUE;												// Start ADC1 burst
+		PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = TRUE;												// Start ADC1 burst
 	}
 
 }

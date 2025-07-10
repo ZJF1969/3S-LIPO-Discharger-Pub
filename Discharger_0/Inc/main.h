@@ -25,9 +25,9 @@ extern const uint32_t SYS_clk;
 
 typedef struct Process_Vars_Obj {		// Create struct type to store main process vars
 
-	BOOL SYS_ON;
-	BOOL BATT_GOOD;
-	BOOL DISCHARGE_ON;
+	BOOL PROCESS_RUNNING;				// Process running
+	BOOL BATT_GOOD;						// Battery connected
+	BOOL DISCHARGE_ON;					// Battery is discharging
 
 	BOOL ADC_CAPTURES_RUNNING;			// Capture bursts running flag
 
@@ -41,7 +41,7 @@ typedef struct Process_Vars_Obj {		// Create struct type to store main process v
 } Process_Vars_Obj_Alias;
 
 extern Process_Vars_Obj_Alias Process_Vars;			// Define struct obj of type Process_Vars_Obj_Alias
-extern Process_Vars_Obj_Alias *Process_Vars_Handle;	// Define struct obj pointer to type Process_Vars_Obj_Alias
+extern Process_Vars_Obj_Alias *PROCESS_VARS_HANDLE;	// Define struct obj pointer to type Process_Vars_Obj_Alias
 
 extern uint8_t Process_Vars_Obj_init(void *pMemory, Process_Vars_Obj_Alias obj);
 
@@ -61,6 +61,8 @@ enum ADC_Channels {
 
 
 /***************************************************************************************************************************************/
+
+extern void error_catch(void);
 
 extern BOOL Debounce(uint8_t input, int *cnt, int *btn_lock);
 

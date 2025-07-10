@@ -39,7 +39,7 @@ const float FINE_SETPOINT = 3.75;
 /*	Process_Vars obj and handle	*/
 
 Process_Vars_Obj_Alias Process_Vars;			// Define struct obj of type Process_Vars_Obj_Alias
-Process_Vars_Obj_Alias *Process_Vars_Handle;	// Define struct obj pointer to type Process_Vars_Obj_Alias
+Process_Vars_Obj_Alias *PROCESS_VARS_HANDLE;	// Define struct obj pointer to type Process_Vars_Obj_Alias
 
 /***************************************************************************************************************************************/
 
@@ -58,7 +58,7 @@ void discharge_logic(void);
 void shutdown(void);
 void get_ADC_capture(void);
 void process_ADC_data(void);
-void error_catch(void);
+//void error_catch(void); 		// Externed in header
 
 /***************************************************************************************************************************************/
 
@@ -100,35 +100,31 @@ int main(void){
 
 		/*	Check for ON/OFF btn activity	*/
 
-		PC13_pressed = Debounce( (((GPIOC->IDR) & GPIO_IDR_13) >> 13), &PC13_cnt, &PC13_lock); //poll blue btn, PC13, active low, service Debounce
+	PC13_pressed = Debounce( (((GPIOC->IDR) & GPIO_IDR_13) >> 13), &PC13_cnt, &PC13_lock); //poll blue btn, PC13, active low, service Debounce
 
-		if (PC13_pressed == TRUE && Process_Vars_Handle->SYS_ON == FALSE){
+	if (PC13_pressed == TRUE && PROCESS_VARS_HANDLE->PROCESS_RUNNING == FALSE){
 
-			if(BattCheck() == TRUE){
+		if(BattCheck() == TRUE){
 
-				startup_checks();
-				Process_Vars_Handle->SYS_ON = TRUE;
-
-			}
-			else{
-
-				// Hold ERROR LED on for a while
-
-			}
+			startup_checks();
+			PROCESS_VARS_HANDLE->PROCESS_RUNNING = TRUE;
 
 		}
-		else if(PC13_pressed == TRUE && Process_Vars_Handle->SYS_ON == TRUE){
+		else{
 
-			Process_Vars_Handle->SYS_ON = FALSE;
-			// Shut down func
-
-			// TURN OFF LED
+			// Hold ERROR LED on for a while
 
 		}
-
 
 	}
+	else if(PC13_pressed == TRUE && PROCESS_VARS_HANDLE->PROCESS_RUNNING == TRUE){
 
+		PROCESS_VARS_HANDLE->PROCESS_RUNNING = FALSE;
+		// Shut down func
+
+		// TURN OFF LED
+
+	}
 }
 
 /***************************************************************************************************************************************/
@@ -143,30 +139,32 @@ void startup_checks(void){
 	ADC1_HANDLE->ADC1_DATA_GOOD = TRUE;
 	ADC1_HANDLE->ADC1_CURRENT_CAPTURE = 1;						// Reset to first ADC1 CH
 
-	Process_Vars_Handle->ADC_CAPTURES_RUNNING = TRUE;			// Start ADC1 burst
+	PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = TRUE;			// Start ADC1 burst
 
 	get_ADC_capture();		// Get Vcells
 	process_ADC_data();		// Process vals
 
-	if (Process_Vars_Handle->V_C1 > 3.75 || Process_Vars_Handle->V_C2 > 3.75 || Process_Vars_Handle->V_C3 > 3.75){		// Check if discharge is applicable.
+	if (PROCESS_VARS_HANDLE->V_C1 > 3.75 || PROCESS_VARS_HANDLE->V_C2 > 3.75 || PROCESS_VARS_HANDLE->V_C3 > 3.75){		// Check if discharge is applicable.
 
-		if (Process_Vars_Handle->V_C1 < 3.6 || Process_Vars_Handle->V_C2 < 3.6 || Process_Vars_Handle->V_C3 < 3.6){		// Check for out of range / damaged cells
+		if (PROCESS_VARS_HANDLE->V_C1 < 3.6 || PROCESS_VARS_HANDLE->V_C2 < 3.6 || PROCESS_VARS_HANDLE->V_C3 < 3.6){		// Check for out of range / damaged cells
 
 			//State_ptr = ERROR STATE
 
 		}
 
-		if (Process_Vars_Handle->V_C1 < 3.8 || Process_Vars_Handle->V_C2 < 3.8 || Process_Vars_Handle->V_C3 < 3.8){
+		if (PROCESS_VARS_HANDLE->V_C1 < 3.8 || PROCESS_VARS_HANDLE->V_C2 < 3.8 || PROCESS_VARS_HANDLE->V_C3 < 3.8){
 
-			Process_Vars_Handle->Current_Setpoint = FINE_SETPOINT;		// Set to fine setpoint if close to done
+			PROCESS_VARS_HANDLE->Current_Setpoint = FINE_SETPOINT;		// Set to fine setpoint if close to done
 
 		}
 		else{
 
-			Process_Vars_Handle->Current_Setpoint = COARSE_SETPOINT;	// Otherwise use coarse setpoint
+			PROCESS_VARS_HANDLE->Current_Setpoint = COARSE_SETPOINT;	// Otherwise use coarse setpoint
 
 		}
 
+
+		start_cell_check_timer();
 
 		// Turn on LED
 		// Start main logic
@@ -185,17 +183,24 @@ void startup_checks(void){
 
 void discharge_logic(void){
 
-	if (Process_Vars_Handle->DISCHARGE_ON == FALSE){
+	if (PROCESS_VARS_HANDLE->PROCESS_RUNNING == TRUE){
 
-		Process_Vars_Handle->DISCHARGE_ON = TRUE;
-		// START DISCHARGE
+		if (PROCESS_VARS_HANDLE->DISCHARGE_ON == FALSE){
+
+			PROCESS_VARS_HANDLE->DISCHARGE_ON = TRUE;
+			// START DISCHARGE
+
+		}
+
+		if (PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING == TRUE){		// If time to get ADC captures
+
+			get_ADC_capture();										// Enter capture routine to get next input
+
+		}
+
+
 
 	}
-
-	start_cell_check_timer();
-
-
-
 }
 
 /***************************************************************************************************************************************/
@@ -217,7 +222,7 @@ void get_ADC_capture(void){
 
 	uint8_t result = 0;
 
-	if (Process_Vars_Handle->ADC_CAPTURES_RUNNING == TRUE &&
+	if (PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING == TRUE &&
 			ADC1_HANDLE->ADC1_IDLE == TRUE &&
 			ADC1_HANDLE->ADC1_DATA_GOOD == TRUE){				// If ADC1 burst running and ADC1 conv done and data ok so far
 
@@ -228,7 +233,7 @@ void get_ADC_capture(void){
 			case 1:
 
 				result = ADC1_Start_Conv(1, &ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Start ADC1 CH1 conv, VC1
-				if(result == 1){ /*set error*/ }
+				if(result == 1){ error_catch(); }
 
 				break;
 
@@ -236,7 +241,7 @@ void get_ADC_capture(void){
 			case 2:
 
 				result = ADC1_Start_Conv(2, &ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Start ADC1 CH2 conv, VC2
-				if(result == 1){ /*set error*/ }
+				if(result == 1){ error_catch(); }
 
 				break;
 
@@ -244,7 +249,7 @@ void get_ADC_capture(void){
 			case 3:
 
 				result = ADC1_Start_Conv(6, &ADC1_HANDLE->ADC1_CH6_DATA[0]);		// Start ADC1 CH3 conv, VC3
-				if(result == 1){ /*set error*/ }
+				if(result == 1){ error_catch(); }
 
 				break;
 
@@ -253,11 +258,11 @@ void get_ADC_capture(void){
 
 				/*
 				result = ADC1_Start_Conv(4, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH4 conv, NTC
-				if(result == 1){ /*set error }
+				if(result == 1){ error_catch(); }
 				*/
 
 				ADC1_HANDLE->ADC1_IDLE = TRUE;										// Reverse to IDLE
-				Process_Vars_Handle->ADC_CAPTURES_RUNNING = FALSE;					// ADC captures done, TODO move this to case 5 and add in ADC CH4
+				PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = FALSE;					// ADC captures done, TODO move this to case 5 and add in ADC CH4
 				//State_ptr = &A1;
 
 				//state = ADC1_Cycle_Start();
@@ -271,7 +276,7 @@ void get_ADC_capture(void){
 				/* Error Catch */
 
 				ADC1_HANDLE->ADC1_DATA_GOOD = FALSE;
-				Process_Vars_Handle->ADC_CAPTURES_RUNNING = FALSE;
+				PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = FALSE;
 				ADC1_HANDLE->ADC1_IDLE = TRUE;
 
 				break;
@@ -288,11 +293,11 @@ void get_ADC_capture(void){
 
 void process_ADC_data(void){
 
-	Process_Vars_Handle->V_C1 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH1_DATA);
+	PROCESS_VARS_HANDLE->V_C1 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH1_DATA);
 
-	Process_Vars_Handle->V_C2 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH2_DATA);
+	PROCESS_VARS_HANDLE->V_C2 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH2_DATA);
 
-	Process_Vars_Handle->V_C3 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH6_DATA);
+	PROCESS_VARS_HANDLE->V_C3 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH6_DATA);
 
 
 }
@@ -314,11 +319,11 @@ void error_catch(void){
 
 uint8_t Process_Vars_Obj_init(void *pMemory, Process_Vars_Obj_Alias obj){
 
-	Process_Vars_Handle = (Process_Vars_Obj_Alias*)calloc(1, sizeof(obj));
+	PROCESS_VARS_HANDLE = (Process_Vars_Obj_Alias*)calloc(1, sizeof(obj));
 
-	if (Process_Vars_Handle == NULL) { return 1; }
+	if (PROCESS_VARS_HANDLE == NULL) { return 1; }
 
-	Process_Vars_Handle = (Process_Vars_Obj_Alias*)pMemory;
+	PROCESS_VARS_HANDLE = (Process_Vars_Obj_Alias*)pMemory;
 
     return 0;
 
