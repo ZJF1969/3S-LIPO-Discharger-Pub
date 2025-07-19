@@ -83,7 +83,8 @@ void TIM4_IRQHandler(void){
 
 	if (PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING == FALSE && ADC1_HANDLE->ADC1_IDLE == TRUE){			// If burst not running and ADC idle
 
-		ADC1_HANDLE->ADC1_CURRENT_CAPTURE = 1;															// Reset to first ADC1 CH
+		ADC1_HANDLE->ADC1_CURRENT_CAPTURE = CH0;														// Reset to first ADC1 CH
+		ADC1_HANDLE->ADC1_DATA_GOOD = TRUE;																// Preset good data
 		PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = TRUE;												// Start ADC1 burst
 	}
 
@@ -95,24 +96,24 @@ void TIM4_IRQHandler(void){
 
 void ADC1_2_IRQHandler(void){
 
-	switch (ADC1 -> ISR & ADC1_IRQ_MASK) {		// Mask ISR reg with expected IRQ flags
+	switch (ADC1->ISR & ADC1_IRQ_MASK) {			// Mask ISR reg with expected IRQ flags
 
-		case ADC_ISR_EOS:						// EOS flag
+		case ADC_ISR_EOS:							// EOS flag
 
-			ADC1->ISR |= 0x1;								// Clr IRQ flags
-			ADC1_Clr_Pend_Irq();							// Clr pending IRQ
+			ADC1->ISR |= 0x1;						// Clr IRQ flags
+			ADC1_Clr_Pend_Irq();					// Clr pending IRQ
 
-			ADC1_HANDLE->ADC1_CURRENT_CAPTURE++;			// Iterate to next capture
 			ADC1_HANDLE->ADC1_IDLE = TRUE;			// ADC1 conv done
 
 			break;
 
 
-		case ADC_ISR_OVR:						// OVR flag
+		case ADC_ISR_OVR:							// OVR flag
 
-			ADC1->CR |= (0x1 << 4);							// Stop ADC current conv
-			ADC1->ISR |= 0x1;								// Clr IRQ flags
-			ADC1_Clr_Pend_Irq();							// Clr pending IRQ
+			ADC1->CR |= (0x1 << 4);					// Stop ADC current conv
+
+			ADC1->ISR |= 0x1;						// Clr IRQ flags
+			ADC1_Clr_Pend_Irq();					// Clr pending IRQ
 
 			ADC1_HANDLE->ADC1_DATA_GOOD = FALSE;	// ADC1 bad data
 			ADC1_HANDLE->ADC1_IDLE = TRUE;			// ADC1 done
@@ -122,11 +123,13 @@ void ADC1_2_IRQHandler(void){
 
 		default:
 
-			ADC1->ISR |= 0x1;								// Clr IRQ flags
-			ADC1_Clr_Pend_Irq();							// Clr pending IRQ
+			ADC1->ISR |= 0x1;						// Clr IRQ flags
+			ADC1_Clr_Pend_Irq();					// Clr pending IRQ
 
 			ADC1_HANDLE->ADC1_DATA_GOOD = FALSE;	// ADC1 bad data
 			ADC1_HANDLE->ADC1_IDLE = TRUE;			// ADC1 done
+
+			break;
 
 	}
 

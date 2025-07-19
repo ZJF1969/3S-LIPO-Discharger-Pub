@@ -172,6 +172,8 @@ void TIMConfig(void){
 
 /***************************************************************************************************************************************/
 
+/* Func to start a timer to control when to check the battery voltage */
+
 void start_cell_check_timer(void){
 
 	TIM4->CR1 |= 0x1;

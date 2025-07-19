@@ -8,6 +8,10 @@
 #include "DMA.h"
 
 
+/***************************************************************************************************************************************/
+
+/* DMA for ADC */
+
 void DMA_CH1_config(void) {
 
 	DMA1_Channel1->CCR &= ~(0x1 << 4);	// Select read from periph mode
@@ -17,16 +21,19 @@ void DMA_CH1_config(void) {
 	DMA1_Channel1->CCR |= (0x1 << 10);	// Select transfer size to mem, 16 bits
 	DMA1_Channel1->CCR |= (0x3 << 12);	// Select very high priority
 
-	DMA1_Channel1->CNDTR = ADC1_N_BURST_CONST;					// Set for 10 transfers, = to ADC1 CH1 burst size
+	DMA1_Channel1->CNDTR = ADC_CONVS_IN_BURST;					// Set for 10 transfers, = to ADC1 CH1 burst size
 
 	DMA1_Channel1->CPAR = &ADC1->DR;							// Set periph address, ADC1 data reg
 
-	//DMA1_Channel1->CMAR = &ADC1_HANDLE->ADC1_CH1_DATA[0];			// Set mem address, ADC1 CH1 data array
+	DMA1_Channel1->CMAR = &ADC1_HANDLE->ADC_CH0_DATA[0];		// Set default mem address, ADC CH0 data array
 
 	DMA1_Channel1->CCR |= 0x1;									// EN DMA1
 
 }
 
+/***************************************************************************************************************************************/
+
+/* Func to dynamically set the DMA write addr */
 
 void DMA_CH1_set_write_addr(uint16_t *addr){
 
@@ -39,7 +46,7 @@ void DMA_CH1_set_write_addr(uint16_t *addr){
 
 }
 
-
+/***************************************************************************************************************************************/
 
 
 

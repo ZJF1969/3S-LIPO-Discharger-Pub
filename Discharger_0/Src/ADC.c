@@ -12,7 +12,7 @@
 
 const uint32_t ADC1_CH1_BURST_FREQ = 10;		// Hz,
 
-const uint8_t ADC1_TOTAL_CAPTURES = 5;
+//const uint8_t ADC1_TOTAL_CAPTURES = 5;
 
 
 uint32_t ADC1_IRQ_MASK = 0;
@@ -256,14 +256,14 @@ float ADC1_Process_Data(uint16_t buffer[]){
 	float val = 0;
 	float accum = 0;
 
-	for (uint8_t i = 0; i < ADC1_N_BURST_CONST; i++){	// Iterate through buffer
+	for (uint8_t i = 0; i < ADC_CONVS_IN_BURST; i++){	// Iterate through buffer
 
 		val = VDDA_Meas / ADC1_Res * buffer[i];			// Calc voltage
 		accum = accum + val;							// Accum for average
 
 	}
 
-	return accum / ADC1_N_BURST_CONST;					// Return the average
+	return accum / ADC_CONVS_IN_BURST;					// Return the average
 
 }
 

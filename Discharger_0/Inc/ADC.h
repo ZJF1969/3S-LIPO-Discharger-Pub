@@ -16,7 +16,16 @@
 #include "DMA.h"
 
 
-#define ADC1_N_BURST_CONST	10	// Num samples each ADC1 CH1 burst sequence
+/***************************************************************************************************************************************/
+
+/* Defines */
+
+#define ADC_CONVS_IN_BURST	10			// Num samples each ADC burst sequence
+
+
+/***************************************************************************************************************************************/
+
+/* Externed Vars */
 
 extern const uint8_t ADC1_TOTAL_CAPTURES;
 
@@ -35,9 +44,11 @@ typedef struct ADC1_OBJ {		// Create struct type to store ADC1 CH1 vars
 
 	uint8_t ADC1_CURRENT_CAPTURE;					// Iterate var to track which input to capture
 
-	uint16_t ADC1_CH1_DATA[ADC1_N_BURST_CONST];		// CH1 data buffer
-	uint16_t ADC1_CH2_DATA[ADC1_N_BURST_CONST];		// CH2 data buffer
-	uint16_t ADC1_CH6_DATA[ADC1_N_BURST_CONST];		// CH4 data buffer
+	uint16_t ADC_CH0_DATA[ADC_CONVS_IN_BURST];		// CH0 data buffer
+	uint16_t ADC_CH1_DATA[ADC_CONVS_IN_BURST];		// CH1 data buffer
+	uint16_t ADC_CH2_DATA[ADC_CONVS_IN_BURST];		// CH2 data buffer
+	uint16_t ADC_CH3_DATA[ADC_CONVS_IN_BURST];		// CH3 data buffer
+	uint16_t ADC_CH4_DATA[ADC_CONVS_IN_BURST];		// CH4 data buffer
 
 	float ADC1_AIN;									// Voltage value result of burst avg calc
 

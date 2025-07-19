@@ -53,7 +53,9 @@ int state = 0;			// Error catch
 
 /* Main func declares */
 
+void button_check(void);
 void startup_checks(void);
+void service_system(void);
 void discharge_logic(void);
 void shutdown(void);
 void get_ADC_capture(void);
@@ -97,8 +99,23 @@ int main(void){
 
 		// WATCHDOG
 
+		button_check();		// Check for ON/OFF btn activity
 
-		/*	Check for ON/OFF btn activity	*/
+		service_system();	// Perform the discharger logic
+
+
+
+	}
+
+}
+
+
+
+/***************************************************************************************************************************************/
+
+/* Check for ON/OFF button and set vars */
+
+void button_check(void){
 
 	PC13_pressed = Debounce( (((GPIOC->IDR) & GPIO_IDR_13) >> 13), &PC13_cnt, &PC13_lock); //poll blue btn, PC13, active low, service Debounce
 
@@ -179,9 +196,9 @@ void startup_checks(void){
 
 /***************************************************************************************************************************************/
 
-/* Main logic for discharge */
+/* Main service duties for discharge, run every cycle */
 
-void discharge_logic(void){
+void service_system(void){
 
 	if (PROCESS_VARS_HANDLE->PROCESS_RUNNING == TRUE){
 
@@ -198,9 +215,23 @@ void discharge_logic(void){
 
 		}
 
+		discharge_logic();
 
 
 	}
+}
+
+/***************************************************************************************************************************************/
+
+/* Main logic for discharge ON/OFF */
+
+void discharge_logic(void){
+
+
+
+
+
+
 }
 
 /***************************************************************************************************************************************/
@@ -222,53 +253,70 @@ void get_ADC_capture(void){
 
 	uint8_t result = 0;
 
-	if (PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING == TRUE &&
-			ADC1_HANDLE->ADC1_IDLE == TRUE &&
-			ADC1_HANDLE->ADC1_DATA_GOOD == TRUE){				// If ADC1 burst running and ADC1 conv done and data ok so far
+	if (ADC1_HANDLE->ADC1_IDLE == TRUE &&
+		ADC1_HANDLE->ADC1_DATA_GOOD == TRUE){				// If ADC is idle and data ok so far
 
-		ADC1_HANDLE->ADC1_IDLE = FALSE;												// Ready to start a conv
+		ADC1_HANDLE->ADC1_IDLE = FALSE;						// Ready to start a conv
 
 		switch (ADC1_HANDLE->ADC1_CURRENT_CAPTURE) {
 
-			case 1:
+			case CH0:
 
-				result = ADC1_Start_Conv(1, &ADC1_HANDLE->ADC1_CH1_DATA[0]);		// Start ADC1 CH1 conv, VC1
+				result = ADC1_Start_Conv(CH0, &ADC1_HANDLE->ADC_CH0_DATA[0]);		// Start ADC CH0 conv, VC1
 				if(result == 1){ error_catch(); }
+
+				ADC1_HANDLE->ADC1_CURRENT_CAPTURE++;
 
 				break;
 
 
-			case 2:
+			case CH1:
 
-				result = ADC1_Start_Conv(2, &ADC1_HANDLE->ADC1_CH2_DATA[0]);		// Start ADC1 CH2 conv, VC2
+				result = ADC1_Start_Conv(CH1, &ADC1_HANDLE->ADC_CH1_DATA[0]);		// Start ADC CH1 conv, VC2
 				if(result == 1){ error_catch(); }
+
+				ADC1_HANDLE->ADC1_CURRENT_CAPTURE++;
 
 				break;
 
 
-			case 3:
+			case CH2:
 
-				result = ADC1_Start_Conv(6, &ADC1_HANDLE->ADC1_CH6_DATA[0]);		// Start ADC1 CH3 conv, VC3
+				result = ADC1_Start_Conv(CH2, &ADC1_HANDLE->ADC_CH2_DATA[0]);		// Start ADC CH2 conv, VC3
 				if(result == 1){ error_catch(); }
+
+				ADC1_HANDLE->ADC1_CURRENT_CAPTURE++;
 
 				break;
 
 
-			case 4:
+			case CH3:
 
-				/*
-				result = ADC1_Start_Conv(4, &ADC1_HANDLE->ADC1_CH4_DATA[0]);		// Start ADC1 CH4 conv, NTC
+
+				result = ADC1_Start_Conv(CH3, &ADC1_HANDLE->ADC_CH3_DATA[0]);		// Start ADC CH3 conv, Batt Current
 				if(result == 1){ error_catch(); }
-				*/
 
-				ADC1_HANDLE->ADC1_IDLE = TRUE;										// Reverse to IDLE
-				PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = FALSE;					// ADC captures done, TODO move this to case 5 and add in ADC CH4
-				//State_ptr = &A1;
-
-				//state = ADC1_Cycle_Start();
-				//if (state == 1) { A2(); }
+				ADC1_HANDLE->ADC1_CURRENT_CAPTURE++;
 
 				break;
+
+
+			case CH4:
+
+				result = ADC1_Start_Conv(CH4, &ADC1_HANDLE->ADC_CH4_DATA[0]);		// Start ADC CH4 conv, NTC
+				if(result == 1){ error_catch(); }
+
+				ADC1_HANDLE->ADC1_CURRENT_CAPTURE++;
+
+				break;
+
+
+			case 5:																	// Final case for wrap up duties
+
+				ADC1_HANDLE->ADC1_IDLE = TRUE;										// Reset to IDLE
+				PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = FALSE;					// ADC captures done, shut off capture routine
+
+				process_ADC_data();													// Process raw ADC data into voltage / amps / temp
 
 
 			default:
@@ -276,16 +324,21 @@ void get_ADC_capture(void){
 				/* Error Catch */
 
 				ADC1_HANDLE->ADC1_DATA_GOOD = FALSE;
-				PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = FALSE;
+				//PROCESS_VARS_HANDLE->ADC_CAPTURES_RUNNING = FALSE;
 				ADC1_HANDLE->ADC1_IDLE = TRUE;
 
-				break;
+				error_catch();
 
+				break;
 
 		}
 
 	}
+	else if (ADC1_HANDLE->ADC1_DATA_GOOD == FALSE){			// TODO REEVALUATE THIS METHOD TO HANDLE BAD DATA
 
+		error_catch();
+
+	}
 }
 
 /***************************************************************************************************************************************/
@@ -293,11 +346,11 @@ void get_ADC_capture(void){
 
 void process_ADC_data(void){
 
-	PROCESS_VARS_HANDLE->V_C1 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH1_DATA);
+	PROCESS_VARS_HANDLE->V_C1 = ADC1_Process_Data(ADC1_HANDLE->ADC_CH0_DATA);
 
-	PROCESS_VARS_HANDLE->V_C2 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH2_DATA);
+	PROCESS_VARS_HANDLE->V_C2 = ADC1_Process_Data(ADC1_HANDLE->ADC_CH1_DATA);
 
-	PROCESS_VARS_HANDLE->V_C3 = ADC1_Process_Data(ADC1_HANDLE->ADC1_CH6_DATA);
+	PROCESS_VARS_HANDLE->V_C3 = ADC1_Process_Data(ADC1_HANDLE->ADC_CH2_DATA);
 
 
 }
